@@ -10,7 +10,7 @@ export class UsersController {
 
   @Post()
    @ApiOperation({
-    summary: 'Create a new user', // 2. Add a short summary
+    summary: 'Create a new user', 
     description: 'Creates a new user record in the database. The username and email must be unique.', // 3. Add a detailed description
   })
   create(@Body() createUserDto: CreateUserDto) {
