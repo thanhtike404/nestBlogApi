@@ -13,3 +13,101 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// ## User Model 👤
+// Expanded for author credibility in a tech context.
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  username     String    @unique
+  passwordHash String
+  fullName     String?
+  bio          String?   @db.Text // Author bio for profile pages
+  githubUrl    String?   // Link to GitHub profile
+  twitterUrl   String?   // Link to Twitter/X profile
+  posts        Post[]
+  comments     Comment[]
+  createdAt    DateTime  @default(now())
+}
+
+// ## Post Model 📝
+// Now includes an optional link to a Series.
+model Post {
+  id         Int       @id @default(autoincrement())
+  title      String
+  slug       String    @unique
+  content    String    @db.Text // IMPORTANT: Store content as Markdown for code blocks
+  status     Status    @default(DRAFT)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // --- Relations ---
+  author     User      @relation(fields: [authorId], references: [id])
+  authorId   Int
+  category   Category  @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  series     Series?   @relation(fields: [seriesId], references: [id]) // Post can optionally belong to a series
+  seriesId   Int?
+  tags       Tag[]
+  images     Image[]
+  comments   Comment[]
+}
+
+// ## Series Model 📖 (NEW)
+// For grouping posts into a tutorial series or collection.
+model Series {
+  id          Int    @id @default(autoincrement())
+  title       String @unique
+  slug        String @unique
+  description String?
+  posts       Post[] // A series can have many posts
+}
+
+// ## Comment Model 💬 (NEW)
+// For reader discussions, with support for threaded replies.
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  // --- Relations ---
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    Int
+
+  // --- For Threaded Replies ---
+  parent    Comment? @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId  Int?
+  replies   Comment[] @relation("Replies")
+}
+
+// ## Category, Tag, and Image Models (Unchanged)
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  slug  String @unique
+  posts Post[]
+}
+
+model Tag {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  slug  String @unique
+  posts Post[]
+}
+
+model Image {
+  id        Int      @id @default(autoincrement())
+  url       String
+  altText   String?
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+}
+
+enum Status {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
