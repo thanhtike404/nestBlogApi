@@ -1,0 +1,8 @@
+services:
+  api:
+    build:
+      context: .
+      target: production
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/nest-blog
+      - MONGODB_URI=mongodb://mongodb:27017/nest-blog
