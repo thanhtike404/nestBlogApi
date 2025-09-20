@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'; // --- 1. Import Swagger ---
+import { BigIntSerializeInterceptor } from './interceptors/bigint-serialize.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,6 +18,9 @@ async function bootstrap() {
   // --- 3. Create and Setup Swagger Document ---
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document); // This sets up the UI at /api-docs
+
+  // Register global interceptor to serialize BigInt values to strings for JSON
+  app.useGlobalInterceptors(new BigIntSerializeInterceptor());
 
   await app.listen(process.env.PORT ?? 3000);
 }

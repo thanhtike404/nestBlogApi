@@ -11,7 +11,10 @@ export async function seedSeries(prisma: PrismaClient) {
   ];
 
   for (const title of series) {
-    await prisma.series.upsert({
+    // some workspaces don't have a 'series' model in Prisma schema; guard at runtime
+    const client: any = prisma as any;
+    if (!client.series) continue;
+    await client.series.upsert({
       where: { title },
       update: {},
       create: {

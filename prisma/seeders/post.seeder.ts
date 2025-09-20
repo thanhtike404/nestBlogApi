@@ -116,7 +116,7 @@ This tutorial covers everything from setup to deployment.`,
     const post = await prisma.blog_posts.create({
       data: {
         title: postData.title,
-        slug: faker.helpers.slugify(postData.title).toLowerCase(),
+        slug: `${faker.helpers.slugify(postData.title).toLowerCase()}-${Date.now()}`,
         excerpt: postData.excerpt,
         content: postData.content,
         featured_image: postData.featured_image,
@@ -183,7 +183,7 @@ This tutorial covers everything from setup to deployment.`,
     const post = await prisma.blog_posts.create({
       data: {
         title,
-        slug: faker.helpers.slugify(title).toLowerCase() + `-${i}`,
+        slug: `${faker.helpers.slugify(title).toLowerCase()}-${i}-${Date.now()}`,
         excerpt: faker.lorem.sentences(2),
         content: faker.lorem.paragraphs(5, '\n\n'),
         featured_image: `https://images.unsplash.com/photo-${faker.number.int({ min: 1500000000000, max: 1700000000000 })}?w=800`,
