@@ -4,7 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service'; 
 import * as bcrypt from 'bcrypt';
 import { ConflictException } from '@nestjs/common';
-import { InternalServerErrorException } from '@nestjs/common';
+import { InternalServerErrorException,NotFoundException } from '@nestjs/common';
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
@@ -27,7 +27,7 @@ export class UsersService {
                     passwordHash:hashedPassword,
                     ...restOfDto
                   }})
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
                 const { passwordHash, ...result } = newUser;
                 return result;
           } catch (error) {
@@ -39,12 +39,28 @@ export class UsersService {
     return this.prisma.user.findMany()
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+ 
+  async findOne(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: id,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    const { passwordHash, ...result } = user;
+    return result;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: id,
+      },
+    });
+    
+    return user;
   }
 
   remove(id: number) {
