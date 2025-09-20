@@ -1,25 +1,65 @@
 import { PrismaClient } from '@prisma/client';
-import { faker } from '@faker-js/faker';
+const { faker } = require('@faker-js/faker');
 import * as bcrypt from 'bcrypt';
 
 export async function seedUsers(prisma: PrismaClient) {
-  console.log('Seeding users...');
-  const salt = await bcrypt.genSalt();
-  const hashedPassword = await bcrypt.hash('password123', salt);
+  console.log('👤 Seeding users...');
 
-  for (let i = 0; i < 10; i++) {
-    await prisma.user.upsert({
-      where: { email: `user${i}@example.com` },
+  const users: any[] = [];
+
+  // Create a few specific users first
+  const specificUsers = [
+    {
+      email: 'john.doe@example.com',
+      name: 'John Doe',
+    },
+    {
+      email: 'jane.smith@example.com',
+      name: 'Jane Smith',
+    },
+    {
+      email: 'alex.wilson@example.com',
+      name: 'Alex Wilson',
+    },
+  ];
+
+  for (const userData of specificUsers) {
+    const hashedPassword = await bcrypt.hash('password123', 10);
+
+    const user = await prisma.users.upsert({
+      where: { email: userData.email },
       update: {},
       create: {
-        email: `user${i}@example.com`,
-        username: faker.internet.username().toLowerCase(), // FIX: Was userName
-        passwordHash: hashedPassword,
-        fullName: faker.person.fullName(),
-        bio: faker.lorem.paragraph(),
-        githubUrl: `https://github.com/${faker.internet.username()}`, // FIX: Was userName
-        twitterUrl: `https://twitter.com/${faker.internet.username()}`, // FIX: Was userName
+        ...userData,
+        password: hashedPassword,
+        email_verified_at: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       },
     });
+    users.push(user);
   }
+
+  // Generate additional random users
+  for (let i = 0; i < 7; i++) {
+    const hashedPassword = await bcrypt.hash('password123', 10);
+    const email = `user${i}@example.com`;
+
+    const user = await prisma.users.upsert({
+      where: { email },
+      update: {},
+      create: {
+        email,
+        name: faker.person.fullName(),
+        password: hashedPassword,
+        email_verified_at: Math.random() > 0.3 ? new Date() : null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
+    users.push(user);
+  }
+
+  console.log(`✅ Created ${users.length} users`);
+  return users;
 }

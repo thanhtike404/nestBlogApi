@@ -9,31 +9,33 @@ import { InternalServerErrorException, NotFoundException } from '@nestjs/common'
 export class UsersService {
   constructor(private prisma: PrismaService) { }
   async create(createUserDto: CreateUserDto) {
-    const { email, password, ...restOfDto } = createUserDto;
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const existingUser = await this.prisma.user.findUnique({
+    const { email, password, name } = createUserDto;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const existingUser = await this.prisma.users.findUnique({
       where: {
         email: email
       }
     })
-    if (existingUser && !existingUser.deletedAt) {
+    if (existingUser) {
       throw new ConflictException('User with this email already exists');
     }
     try {
-      const newUser = await this.prisma.user.create({
+      const newUser = await this.prisma.users.create({
         data: {
           email,
-          passwordHash: hashedPassword,
-          ...restOfDto
+          password: hashedPassword,
+          name,
+          created_at: new Date(),
+          updated_at: new Date()
         }
       })
 
-      const { passwordHash, createdAt, deletedAt, ...result } = newUser;
+      const { password: _, created_at, updated_at, ...result } = newUser;
       return {
         ...result,
-        createdAt: createdAt.toISOString(),
-        deletedAt: deletedAt ? (deletedAt as Date).toISOString() : null
+        created_at: created_at?.toISOString(),
+        updated_at: updated_at?.toISOString()
       };
     } catch (error) {
       throw new InternalServerErrorException('An unexpected error occurred.');
@@ -41,36 +43,33 @@ export class UsersService {
   }
 
   async findAll() {
-    const users = await this.prisma.user.findMany({
-      where: {
-        deletedAt: null // Only return non-deleted users
-      }
-    });
+    const users = await this.prisma.users.findMany();
     return users.map(user => {
-      const { passwordHash, createdAt, deletedAt, ...result } = user;
+      const { password, created_at, updated_at, ...result } = user;
       return {
         ...result,
-        createdAt: createdAt.toISOString(),
-        deletedAt: deletedAt ? (deletedAt as Date).toISOString() : null
+        created_at: created_at?.toISOString(),
+        updated_at: updated_at?.toISOString()
       };
     });
   }
 
 
   async findOne(id: number) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.users.findUnique({
       where: {
-        id: id,
+        id: BigInt(id),
       },
     });
-    if (!user || user.deletedAt) {
+    if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    const { passwordHash, createdAt, deletedAt, ...result } = user;
+    const { password, created_at, updated_at, ...result } = user;
     return {
       ...result,
-      createdAt: createdAt.toISOString(),
-      deletedAt: deletedAt ? (deletedAt as Date).toISOString() : null
+      id: Number(result.id),
+      created_at: created_at?.toISOString(),
+      updated_at: updated_at?.toISOString()
     };
   }
 
