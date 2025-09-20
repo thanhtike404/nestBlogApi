@@ -1,12 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-
 }
 
 datasource db {
@@ -14,75 +7,61 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ## User Model 👤
-// Expanded for author credibility in a tech context.
 model User {
   id           Int       @id @default(autoincrement())
   email        String    @unique
   username     String    @unique
   passwordHash String
   fullName     String?
-  bio          String?   @db.Text // Author bio for profile pages
-  githubUrl    String?   // Link to GitHub profile
-  twitterUrl   String?   // Link to Twitter/X profile
-  posts        Post[]
-  comments     Comment[]
   createdAt    DateTime  @default(now())
+  bio          String?
+  githubUrl    String?
+  twitterUrl   String?
+  deletedAt    DateTime?
+  comments     Comment[]
+  posts        Post[]
 }
 
-// ## Post Model 📝
-// Now includes an optional link to a Series.
 model Post {
   id         Int       @id @default(autoincrement())
   title      String
   slug       String    @unique
-  content    String    @db.Text // IMPORTANT: Store content as Markdown for code blocks
+  content    String
   status     Status    @default(DRAFT)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
-
-  // --- Relations ---
-  author     User      @relation(fields: [authorId], references: [id])
   authorId   Int
-  category   Category  @relation(fields: [categoryId], references: [id])
   categoryId Int
-  series     Series?   @relation(fields: [seriesId], references: [id]) // Post can optionally belong to a series
   seriesId   Int?
-  tags       Tag[]
-  images     Image[]
   comments   Comment[]
+  images     Image[]
+  author     User      @relation(fields: [authorId], references: [id])
+  category   Category  @relation(fields: [categoryId], references: [id])
+  series     Series?   @relation(fields: [seriesId], references: [id])
+  tags       Tag[]     @relation("PostToTag")
 }
 
-// ## Series Model 📖 (NEW)
-// For grouping posts into a tutorial series or collection.
 model Series {
-  id          Int    @id @default(autoincrement())
-  title       String @unique
-  slug        String @unique
+  id          Int     @id @default(autoincrement())
+  title       String  @unique
+  slug        String  @unique
   description String?
-  posts       Post[] // A series can have many posts
+  posts       Post[]
 }
 
-// ## Comment Model 💬 (NEW)
-// For reader discussions, with support for threaded replies.
 model Comment {
-  id        Int      @id @default(autoincrement())
-  content   String   @db.Text
-  createdAt DateTime @default(now())
-
-  // --- Relations ---
-  author    User     @relation(fields: [authorId], references: [id])
+  id        Int       @id @default(autoincrement())
+  content   String
+  createdAt DateTime  @default(now())
   authorId  Int
-  post      Post     @relation(fields: [postId], references: [id])
   postId    Int
-
-  // --- For Threaded Replies ---
-  parent    Comment? @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
   parentId  Int?
+  author    User      @relation(fields: [authorId], references: [id])
+  parent    Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   Comment[] @relation("Replies")
+  post      Post      @relation(fields: [postId], references: [id])
 }
 
-// ## Category, Tag, and Image Models (Unchanged)
 model Category {
   id    Int    @id @default(autoincrement())
   name  String @unique
@@ -94,7 +73,7 @@ model Tag {
   id    Int    @id @default(autoincrement())
   name  String @unique
   slug  String @unique
-  posts Post[]
+  posts Post[] @relation("PostToTag")
 }
 
 model Image {
@@ -102,8 +81,8 @@ model Image {
   url       String
   altText   String?
   createdAt DateTime @default(now())
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    Int
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
 enum Status {

@@ -1,4 +1,4 @@
 import { createZodDto } from 'nestjs-zod';
-import { createUserSchema } from '../schemas/create-user.schema';
+import { userResponseSchema } from '../schemas/user-response.schema';
 
-export class UserResponseDto extends createZodDto(createUserSchema) {}
+export class UserResponseDto extends createZodDto(userResponseSchema) { }
