@@ -6,20 +6,31 @@ import { BigIntSerializeInterceptor } from './interceptors/bigint-serialize.inte
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // --- 2. Create Swagger Configuration ---
   const config = new DocumentBuilder()
     .setTitle('My Tech Blog API')
     .setDescription('API documentation for the tech blog')
     .setVersion('1.0')
-    .addTag('posts', 'Endpoints related to blog posts') // Add tags for each module
+    .addTag('posts', 'Endpoints related to blog posts')
     .addTag('users', 'Endpoints related to users')
+    .addTag('auth')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
     .build();
 
-  // --- 3. Create and Setup Swagger Document ---
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document); // This sets up the UI at /api-docs
 
-  // Register global interceptor to serialize BigInt values to strings for JSON
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document);
+
+
   app.useGlobalInterceptors(new BigIntSerializeInterceptor());
 
   await app.listen(process.env.PORT ?? 3000);

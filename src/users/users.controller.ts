@@ -21,7 +21,7 @@ import { UserResponseDto } from './dto/user-response.dto';
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Post()
   @ApiOperation({
@@ -175,5 +175,17 @@ export class UsersController {
   })
   async findDeleted() {
     return this.usersService.findDeleted();
+  }
+  @Get('by-email/:email')
+  @ApiOperation({
+    summary: 'Find user by email',
+    description: 'Retrieve a user by their email address.',
+  })
+  @ApiOkResponse({
+    description: 'User found',
+    type: UserResponseDto,
+  })
+  async findByEmail(@Param('email') email: string) {
+    return this.usersService.findByEmail(email);
   }
 }

@@ -214,4 +214,22 @@ export class UsersService {
       };
     });
   }
+  async findByEmail(email: string) {
+    const user = await this.prisma.users.findUnique({
+      where: {
+        email,
+      },
+    });
+    console.log('User:', user);
+    if (!user) {
+      return null;
+    }
+    const safe = serializeBigInt(user) as any;
+    const { password, created_at, name: dbName } = safe;
+    console.log('Safe user:', safe);
+    return {
+      email: safe.email,
+      password: safe.password,
+    };
+  }
 }
