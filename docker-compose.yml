@@ -3,6 +3,8 @@ services:
     build:
       context: .
       target: development
+    # Use the entrypoint script
+    entrypoint: /usr/src/app/entrypoint.sh
     command: pnpm run start:dev
     ports:
       - "3000:3000"
@@ -10,13 +12,16 @@ services:
       - postgres
       - mongodb
     environment:
+      # Keep your existing PostgreSQL URL
       - DATABASE_URL=postgresql://user:password@postgres:5432/nest-blog
+      # --- ADD THIS LINE ---
       - MONGODB_URI=mongodb://mongodb:27017/nest-blog
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
 
   postgres:
+    # ... (no changes needed here)
     image: postgres:16
     ports:
       - "5432:5432"
@@ -28,6 +33,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   mongodb:
+    # ... (no changes needed here)
     image: mongo:7
     ports:
       - "27017:27017"
@@ -35,6 +41,6 @@ services:
       - mongodb_data:/data/db
 
 volumes:
-  postgres_data: 
+  postgres_data:
   mongodb_data:
 

@@ -1,15 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { MongoPrismaService } from 'src/prisma/mongo-prisma.service';
 
 @Injectable()
 export class CommentsService {
+    constructor(private mongoPrisma: MongoPrismaService) { }
+  
+
   create(createCommentDto: CreateCommentDto) {
     return 'This action adds a new comment';
   }
 
-  findAll() {
-    return `This action returns all comments`;
+  async findAll() {
+    const comments=await this.mongoPrisma.blog_content.findMany();
+    return comments
   }
 
   findOne(id: number) {

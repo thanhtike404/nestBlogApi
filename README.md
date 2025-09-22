@@ -1,163 +1,135 @@
-# Blog API
+NestJS Multi-Database Blog API
+A modern blog and content management system built with NestJS, Prisma, Docker, PostgreSQL, and MongoDB. This API provides a complete, containerized backend solution for managing blog posts, user authentication, rich content, categories, and tags.
 
-A modern blog and content management system built with NestJS, Prisma, and PostgreSQL. This API provides a complete backend solution for managing blog posts, user authentication, comments, categories, tags, and content series.
+Features
+User Management: User registration, JWT-based authentication, and profile management.
 
-## Features
+Dual Database Architecture: Utilizes PostgreSQL for structured relational data (users, posts) and MongoDB for flexible document data (rich content, logs).
 
-- **User Management**: User registration, authentication, and profile management
-- **Content Management**: Create, edit, and publish blog posts with Markdown support
-- **Series Organization**: Group related posts into tutorial series or collections
-- **Categorization**: Organize content with categories and tags
-- **Comments System**: Threaded comments with reply functionality
-- **Image Management**: Upload and manage post images
-- **Draft System**: Save posts as drafts before publishing
-- **API Documentation**: Auto-generated Swagger documentation
+Content Management: Create, edit, and publish blog posts.
 
-## Tech Stack
+Rich Content Storage: Store complex post content (e.g., from block-style editors) in MongoDB.
 
-- **Framework**: NestJS
-- **Database**: PostgreSQL with Prisma ORM
-- **Validation**: Zod with nestjs-zod
-- **Authentication**: bcrypt for password hashing
-- **Documentation**: Swagger/OpenAPI
-- **Testing**: Jest for unit and e2e tests
+Categorization: Organize content with categories and tags.
 
-## Prerequisites
+API Documentation: Auto-generated Swagger (OpenAPI) documentation.
 
-- Node.js (v18 or higher)
-- PostgreSQL database
-- pnpm package manager
+Containerized Environment: Fully configured with Docker and Docker Compose for easy setup and consistent development.
 
-## Installation
+Tech Stack
+Framework: NestJS
 
-1. Clone the repository
-```bash
-git clone <repository-url>
-cd blog-api
-```
+Databases: PostgreSQL & MongoDB
 
-2. Install dependencies
-```bash
-pnpm install
-```
+ORM: Prisma (with two separate clients)
 
-3. Set up environment variables
-```bash
-cp env.example .env
-```
-Edit `.env` with your database connection and other configuration values.
+Containerization: Docker & Docker Compose
 
-4. Set up the database
-```bash
-# Generate Prisma client
-npx prisma generate
+Validation: Zod with nestjs-zod
 
-# Run database migrations
-npx prisma migrate dev
+Authentication: JWT & bcrypt for password hashing
+
+Package Manager: pnpm
+
+Prerequisites
+Docker
+
+Docker Compose
+
+Installation
+Clone the repository
+
+git clone <your-repository-url>
+cd <your-repo-name>
+
+Set up environment variables
+
+Create a .env file by copying the example file.
+
+cp .env.example .env
+
+The default values in .env.example are already configured to work with the docker-compose.yml file. You should update the JWT_SECRET with a secure, random string.
+
+Build and Start the Services
+
+This single command will build the Docker images and start the NestJS API, PostgreSQL, and MongoDB containers.
+
+docker compose up --build
+
+The API will be available at http://localhost:3000.
+
+Database Setup
+The first time you start the application, the entrypoint.sh script will automatically run the PostgreSQL migrations. However, you may need to manage the databases manually.
+
+All database commands must be run through the running api container.
+
+PostgreSQL
+# Run migrations (this is also done automatically on startup)
+docker compose exec api pnpm run prisma:migrate:dev
 
 # Seed the database (optional)
-npx prisma db seed
-```
+docker compose exec api pnpm run db:seed
 
-## Development
+MongoDB
+MongoDB does not use migrations. The db push command syncs your schema with the database. You should run this manually after changing your prisma-mongo/schema.prisma file.
 
-```bash
-# Start in development mode with hot reload
-pnpm run start:dev
+# Push schema changes to MongoDB
+docker compose exec api pnpm run mongo:dbpush
 
-# Start in debug mode
-pnpm run start:debug
+Development
+The services are configured to run in development mode with hot-reloading.
 
-# Build for production
-pnpm run build
+Start all services: docker compose up
 
-# Start production server
-pnpm run start:prod
-```
+Stop all services: docker compose down
 
-## Testing
+Stop services and remove volumes: docker compose down -v
 
-```bash
+Testing
+Run tests by executing the test command inside the api container.
+
 # Run unit tests
-pnpm run test
+docker compose exec api pnpm run test
 
 # Run tests in watch mode
-pnpm run test:watch
+docker compose exec api pnpm run test:watch
 
 # Run e2e tests
-pnpm run test:e2e
+docker compose exec api pnpm run test:e2e
 
 # Generate test coverage report
-pnpm run test:cov
-```
+docker compose exec api pnpm run test:cov
 
-## API Documentation
-
+API Documentation
 Once the server is running, you can access the Swagger API documentation at:
-```
+
 http://localhost:3000/api
-```
 
-## Database Schema
+Environment Variables
+Your .env file should contain the following variables:
 
-The application uses the following main entities:
+# PostgreSQL connection URL for Prisma
+DATABASE_URL="postgresql://user:password@postgres:5432/nest-blog"
 
-- **Users**: Author profiles with social links and bio
-- **Posts**: Blog posts with Markdown content, status tracking
-- **Series**: Collections of related posts (tutorials, guides)
-- **Categories**: High-level content organization
-- **Tags**: Flexible content labeling
-- **Comments**: Threaded discussion system
-- **Images**: Post media management
+# MongoDB connection URL for Prisma
+MONGODB_URI="mongodb://mongodb:27017/nest-blog"
 
-## API Endpoints
+# Secret for signing JWTs
+JWT_SECRET="your-super-secret-and-long-jwt-string"
 
-### Authentication & Users
-- `POST /users` - Create new user
-- `GET /users/:id` - Get user profile
-- `PUT /users/:id` - Update user profile
-
-### Posts
-- `GET /posts` - List published posts (with pagination)
-- `POST /posts` - Create new post
-- `GET /posts/:slug` - Get post by slug
-- `PUT /posts/:id` - Update post
-- `DELETE /posts/:id` - Delete post
-
-### Series
-- `GET /series` - List all series
-- `POST /series` - Create new series
-- `GET /series/:slug` - Get series with posts
-
-### Categories & Tags
-- `GET /categories` - List categories
-- `GET /tags` - List tags
-- `POST /categories` - Create category
-- `POST /tags` - Create tag
-
-### Comments
-- `GET /posts/:id/comments` - Get post comments
-- `POST /posts/:id/comments` - Add comment
-- `POST /comments/:id/replies` - Reply to comment
-
-## Environment Variables
-
-Create a `.env` file with the following variables:
-
-```env
-DATABASE_URL="postgresql://username:password@localhost:5432/blog_db"
-JWT_SECRET="your-jwt-secret"
+# Port the application will listen on
 PORT=3000
-```
 
-## Contributing
+Contributing
+Fork the repository
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Create a feature branch (git checkout -b feature/amazing-feature)
 
-## License
+Commit your changes (git commit -m 'Add amazing feature')
 
+Push to the branch (git push origin feature/amazing-feature)
+
+Open a Pull Request
+
+License
 This project is licensed under the MIT License.

@@ -10,7 +10,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { TagsModule } from './tags/tags.module';
 import { ImagesModule } from './images/images.module';
 import { AuthModule } from './auth/auth.module';
-
+import { MongoPrismaService } from './prisma/mongo-prisma.service';
 @Module({
   imports: [
     PrismaModule,
