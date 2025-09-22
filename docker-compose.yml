@@ -15,7 +15,7 @@ services:
       # Keep your existing PostgreSQL URL
       - DATABASE_URL=postgresql://user:password@postgres:5432/nest-blog
       # --- ADD THIS LINE ---
-      - MONGODB_URI=mongodb://mongodb:27017/nest-blog
+      - MONGODB_URI=mongodb://mongodb:27017/nest-blog?replicaSet=rs0
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
@@ -39,7 +39,7 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
-
+    command: ["--replSet", "rs0", "--bind_ip_all"]
 volumes:
   postgres_data:
   mongodb_data:

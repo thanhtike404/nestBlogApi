@@ -3,15 +3,19 @@ import {
   NotFoundException,
   ConflictException,
   InternalServerErrorException,
+  Logger
 } from '@nestjs/common';
 import { CreateBlogPostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { serializeBigInt } from '../utils/serialize';
+import { MongoPrismaService } from 'src/prisma/mongo-prisma.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly prisma: PrismaService) { }
+  private readonly logger = new Logger(PostsService.name);
+
+  constructor(private readonly prisma: PrismaService, private readonly prismaMongo: MongoPrismaService) { }
 
   async create(createPostDto: CreateBlogPostDto) {
     const {
@@ -25,50 +29,97 @@ export class PostsService {
       seo_meta,
       reading_time,
       is_featured,
-      content,
       is_published,
       published_at,
     } = createPostDto;
-    // check slug uniqueness only when slug is provided (Prisma requires at least one unique field)
+
+
     if (typeof slug === 'string' && slug.length > 0) {
       const existing = await this.prisma.blog_posts.findUnique({
         where: { slug },
       });
-      if (existing)
+      if (existing) {
         throw new ConflictException('Post with this slug already exists');
+      }
     }
 
     try {
-      const created = await this.prisma.blog_posts.create({
+
+      const createdPost = await this.prisma.blog_posts.create({
         data: {
           title,
           slug,
-          user_id: BigInt(user_id as any),
-          category_id: BigInt(category_id as any),
+          user_id: BigInt(user_id),
+          category_id: BigInt(category_id),
           excerpt,
           featured_image,
-          content_blocks,
           seo_meta,
           reading_time,
           is_featured,
-          content,
           is_published,
           published_at: published_at ? new Date(published_at) : null,
           created_at: new Date(),
           updated_at: new Date(),
-        } as any,
+        },
       });
-      return serializeBigInt(created);
-    } catch {
+
+
+      await this.prismaMongo.blog_content.create({
+        data: {
+          postId: Number(createdPost.id),
+          content: content_blocks || { blocks: [] },
+        },
+      });
+
+
+      return serializeBigInt(createdPost);
+    } catch (error) {
+
+      this.logger.error('Failed to create post', error.stack);
+
       throw new InternalServerErrorException('Failed to create post');
     }
   }
 
   async findAll() {
-    const rows = await this.prisma.blog_posts.findMany({
+    const postsFromDb = await this.prisma.blog_posts.findMany({
       include: { categories: true, users: true },
     });
-    return serializeBigInt(rows);
+
+    if (!postsFromDb) return [];
+
+    const postIds = postsFromDb.map(post => Number(post.id));
+
+
+    const contentsFromDb = await this.prismaMongo.blog_content.findMany({
+      where: {
+        postId: {
+          in: postIds,
+        },
+      },
+    });
+
+
+    const contentMap = new Map(
+      contentsFromDb.map(content => [content.postId, content]),
+    );
+
+
+    const combinedPosts = postsFromDb.map(post => {
+      const contentDetails = contentMap.get(Number(post.id)) || null;
+
+
+      return {
+        ...post,
+        id: post.id,
+        user: post.users,
+        category: post.categories,
+        content_details: contentDetails,
+      };
+    });
+
+
+    return serializeBigInt(combinedPosts);
   }
 
   async findOne(id: number) {

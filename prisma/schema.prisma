@@ -20,7 +20,6 @@ model blog_posts {
   category_id    BigInt
   excerpt        String?
   featured_image String?         @db.VarChar(255)
-  content_blocks Json?           @db.Json
   seo_meta       Json?           @db.Json
   reading_time   Int?
   views_count    Int             @default(0)

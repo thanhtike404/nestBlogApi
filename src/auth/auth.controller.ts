@@ -16,10 +16,17 @@ import {
 } from '@nestjs/swagger';
 import { CreateLoginDto } from './dto/loginDto';
 import { AuthGuard } from './auth.guard';
+import { GetUser } from './get-user.decorator';
+type UserPayload = {
+    id: number;
+    email: string;
+};
 
 @ApiTags('auth')
 @Controller('auth')
+
 export class AuthController {
+
     constructor(private authService: AuthService) { }
 
     @HttpCode(HttpStatus.OK)
@@ -40,11 +47,12 @@ export class AuthController {
         summary: 'Get user profile',
         description: 'Protected route that returns user profile information',
     })
-    profile(@Request() req) {
-        console.log('User from token:', req.user);
+    // Use the @GetUser decorator to inject the user payload directly
+    profile(@GetUser() user: UserPayload) {
+        console.log('User from token:', user);
         return {
             message: 'Protected route accessed successfully',
-            user: req.user
+            user: user
         };
     }
 }
