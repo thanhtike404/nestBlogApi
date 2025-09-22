@@ -4,7 +4,7 @@ import {
   ConflictException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { CreatePostDto } from './dto/create-post.dto';
+import { CreateBlogPostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { serializeBigInt } from '../utils/serialize';
@@ -13,7 +13,7 @@ import { serializeBigInt } from '../utils/serialize';
 export class PostsService {
   constructor(private readonly prisma: PrismaService) { }
 
-  async create(createPostDto: CreatePostDto) {
+  async create(createPostDto: CreateBlogPostDto) {
     const {
       title,
       slug,

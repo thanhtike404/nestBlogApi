@@ -3,38 +3,28 @@ FROM node:20 AS development
 
 WORKDIR /usr/src/app
 
-# Copy application dependency manifests to the container image.
 COPY package.json pnpm-lock.yaml ./
-
-# Copy prisma schema
 COPY prisma ./prisma
 
-# Install pnpm
 RUN npm install -g pnpm
-
-# Install app dependencies using pnpm.
 RUN pnpm install
 
-# Generate prisma client
+# Generate prisma client, but do not migrate
 RUN pnpm exec prisma generate
 
-# Copy the rest of the application code to the container image.
 COPY . .
 
-# Builder stage
+# Builder stage (for production)
 FROM node:20 AS builder
 
 WORKDIR /usr/src/app
 
 COPY package.json pnpm-lock.yaml ./
-
-# Copy prisma schema
 COPY prisma ./prisma
 
-# Install pnpm
 RUN npm install -g pnpm
 
-# Install dependencies
+# Install ALL dependencies first to build the app
 RUN pnpm install --frozen-lockfile
 
 # Generate prisma client
@@ -45,18 +35,19 @@ COPY . .
 # Build the application
 RUN pnpm run build
 
-# Prune development dependencies
+# Prune development-only dependencies for a smaller image
 RUN pnpm prune --prod
 
 # Production stage
 FROM node:20 AS production
 
-# Set the working directory
 WORKDIR /usr/src/app
 
-# Copy the bundled code from the builder stage
+# Copy only the necessary production artifacts from the builder stage
 COPY --chown=node:node --from=builder /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=builder /usr/src/app/dist ./dist
+# We also need to copy the prisma schema for the runtime client
+COPY --chown=node:node --from=builder /usr/src/app/prisma ./prisma
 
 # Start the server
 CMD ["node", "dist/main.js"]
