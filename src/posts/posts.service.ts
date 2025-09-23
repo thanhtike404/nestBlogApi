@@ -83,7 +83,7 @@ export class PostsService {
 
   async findAll() {
     const postsFromDb = await this.prisma.blog_posts.findMany({
-      include: { categories: true, users: true },
+      include: { categories: true, users: true, post_tags: true },
     });
 
     if (!postsFromDb) return [];
