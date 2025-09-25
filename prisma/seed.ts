@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { seedUsers } from './seeders/user.seeder';
-import { seedCategories } from './seeders/category.seeder';
+
 import { seedTags } from './seeders/tag.seeder';
 import { seedPosts } from './seeders/post.seeder';
 import { PrismaClient as MongoPrismaClient } from '../node_modules/@prisma-mongo/prisma/client';
@@ -13,7 +13,7 @@ async function main() {
 
   // The order is important due to relations
   await seedUsers(prisma);
-  await seedCategories(prisma);
+
   await seedTags(prisma);
   await seedPosts(prisma, prismaMongo); // Posts seeder will handle post_category and post_tag relations
 

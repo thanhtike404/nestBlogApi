@@ -2,7 +2,6 @@
 
 # This script is the entrypoint for the 'api' service.
 # It ensures that database migrations are applied before the main application starts.
-
 # Exit immediately if any command fails, to prevent the app from starting in a broken state.
 set -e
 
@@ -14,7 +13,7 @@ sleep 5
 # Run the specific migration command for your PostgreSQL database using the script from package.json.
 # This command will connect to the 'postgres' service and apply any pending migrations.
 echo "Running PostgreSQL migrations..."
-pnpm run prisma:migrate:dev
+# pnpm run prisma:migrate:dev
 
 # This is the final and most important step.
 # 'exec "$@"' takes the command specified in the 'command' section of docker-compose.yml

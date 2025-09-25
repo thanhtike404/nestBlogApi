@@ -17,7 +17,7 @@ model blog_posts {
   published_at   DateTime?       @db.Timestamp(0)
   slug           String          @unique(map: "blog_posts_slug_unique") @db.VarChar(255)
   user_id        BigInt
-  category_id    BigInt
+
   excerpt        String?
   featured_image String?         @db.VarChar(255)
   seo_meta       Json?           @db.Json
@@ -25,12 +25,12 @@ model blog_posts {
   views_count    Int             @default(0)
   is_featured    Boolean         @default(false)
   content        String?
-  categories     categories      @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_posts_category_id_foreign")
+  
   users          users           @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "blog_posts_user_id_foreign")
-  post_category  post_category[]
+
   post_tag       post_tag[]
 
-  @@index([category_id, is_published], map: "blog_posts_category_id_is_published_index")
+
   @@index([is_featured], map: "blog_posts_is_featured_index")
   @@index([is_published, published_at], map: "blog_posts_is_published_published_at_index")
   @@index([user_id, is_published], map: "blog_posts_user_id_is_published_index")
@@ -49,17 +49,6 @@ model cache_locks {
   expiration Int
 }
 
-model categories {
-  id            BigInt          @id @default(autoincrement())
-  name          String          @db.VarChar(255)
-  slug          String          @unique(map: "categories_slug_unique") @db.VarChar(255)
-  created_at    DateTime?       @db.Timestamp(0)
-  updated_at    DateTime?       @db.Timestamp(0)
-  blog_posts    blog_posts[]
-  post_category post_category[]
-
-  @@index([slug], map: "categories_slug_index")
-}
 
 model failed_jobs {
   id         BigInt   @id @default(autoincrement())
@@ -108,16 +97,7 @@ model password_reset_tokens {
   created_at DateTime? @db.Timestamp(0)
 }
 
-model post_category {
-  post_id     BigInt
-  category_id BigInt
-  categories  categories @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "post_category_category_id_foreign")
-  blog_posts  blog_posts @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "post_category_post_id_foreign")
 
-  @@id([post_id, category_id])
-  @@index([category_id, post_id], map: "post_category_category_id_post_id_index")
-  @@index([post_id, category_id], map: "post_category_post_id_category_id_index")
-}
 
 model post_tag {
   post_id    BigInt
@@ -158,36 +138,6 @@ model tags {
   @@index([slug], map: "tags_slug_index")
 }
 
-model telescope_entries {
-  sequence                BigInt                   @id @default(autoincrement())
-  uuid                    String                   @unique(map: "telescope_entries_uuid_unique") @db.Uuid
-  batch_id                String                   @db.Uuid
-  family_hash             String?                  @db.VarChar(255)
-  should_display_on_index Boolean                  @default(true)
-  type                    String                   @db.VarChar(20)
-  content                 String
-  created_at              DateTime?                @db.Timestamp(0)
-  telescope_entries_tags  telescope_entries_tags[]
-
-  @@index([batch_id], map: "telescope_entries_batch_id_index")
-  @@index([created_at], map: "telescope_entries_created_at_index")
-  @@index([family_hash], map: "telescope_entries_family_hash_index")
-  @@index([type, should_display_on_index], map: "telescope_entries_type_should_display_on_index_index")
-}
-
-model telescope_entries_tags {
-  entry_uuid        String            @db.Uuid
-  tag               String            @db.VarChar(255)
-  telescope_entries telescope_entries @relation(fields: [entry_uuid], references: [uuid], onDelete: Cascade, onUpdate: NoAction, map: "telescope_entries_tags_entry_uuid_foreign")
-
-  @@id([entry_uuid, tag])
-  @@index([tag], map: "telescope_entries_tags_tag_index")
-}
-
-model telescope_monitoring {
-  tag String @id @db.VarChar(255)
-}
-
 model users {
   id                BigInt       @id @default(autoincrement())
   name              String       @db.VarChar(255)
@@ -198,4 +148,16 @@ model users {
   created_at        DateTime?    @db.Timestamp(0)
   updated_at        DateTime?    @db.Timestamp(0)
   blog_posts        blog_posts[]
+  followers         Follows[]   @relation("Followers")
+  following         Follows[]   @relation("Following")
+}
+
+
+model Follows {
+  followerId  BigInt
+  followedId  BigInt
+  createdAt   DateTime @default(now())
+  follower    users    @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followed    users    @relation("Followers", fields: [followedId], references: [id], onDelete: Cascade)
+  @@id([followerId, followedId])
 }

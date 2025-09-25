@@ -11,10 +11,10 @@ export async function seedPosts(
   console.log('📝 Seeding blog posts...');
 
   const users = await prismaPostgres.users.findMany();
-  const categories = await prismaPostgres.categories.findMany();
+
   const tags = await prismaPostgres.tags.findMany();
 
-  if (users.length === 0 || categories.length === 0 || tags.length === 0) {
+  if (users.length === 0 || tags.length === 0) {
     console.log('⚠️ No users, categories, or tags found. Please seed them first.');
     return [];
   }
@@ -45,7 +45,7 @@ export async function seedPosts(
 
   for (const postData of samplePosts) {
     const randomUser = users[Math.floor(Math.random() * users.length)];
-    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+
 
     const post = await prismaPostgres.blog_posts.create({
       data: {
@@ -56,7 +56,7 @@ export async function seedPosts(
         is_published: true,
         published_at: new Date(),
         user_id: BigInt(randomUser.id),
-        category_id: BigInt(randomCategory.id),
+
         // ... other fields
       },
     });
@@ -75,7 +75,7 @@ export async function seedPosts(
   for (let i = 0; i < 15; i++) {
     const title = faker.lorem.sentence({ min: 3, max: 8 });
     const randomUser = users[Math.floor(Math.random() * users.length)];
-    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+
 
     const post = await prismaPostgres.blog_posts.create({
       data: {
@@ -83,7 +83,7 @@ export async function seedPosts(
         slug: `${faker.helpers.slugify(title).toLowerCase()}-${i}-${Date.now()}`,
         excerpt: faker.lorem.sentences(2),
         user_id: BigInt(randomUser.id),
-        category_id: BigInt(randomCategory.id),
+
       },
     });
 

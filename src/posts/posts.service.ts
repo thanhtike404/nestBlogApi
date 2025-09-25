@@ -22,7 +22,7 @@ export class PostsService {
       title,
       slug,
       user_id,
-      category_id,
+
       excerpt,
       featured_image,
       content_blocks,
@@ -50,7 +50,7 @@ export class PostsService {
           title,
           slug,
           user_id: BigInt(user_id),
-          category_id: BigInt(category_id),
+       
           excerpt,
           featured_image,
           seo_meta,
@@ -83,7 +83,7 @@ export class PostsService {
 
   async findAll() {
     const postsFromDb = await this.prisma.blog_posts.findMany({
-      include: { categories: true, users: true, post_tags: true },
+      include: {  users: true },
     });
 
     if (!postsFromDb) return [];
@@ -113,7 +113,7 @@ export class PostsService {
         ...post,
         id: post.id,
         user: post.users,
-        category: post.categories,
+    
         content_details: contentDetails,
       };
     });
@@ -125,7 +125,7 @@ export class PostsService {
   async findOne(id: number) {
     const post = await this.prisma.blog_posts.findUnique({
       where: { id: BigInt(id) },
-      include: { categories: true, users: true },
+      include: { users: true },
     });
     if (!post) throw new NotFoundException(`Post with ID ${id} not found`);
     return serializeBigInt(post);

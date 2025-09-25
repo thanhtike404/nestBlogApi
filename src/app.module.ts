@@ -6,11 +6,12 @@ import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { SeriesModule } from './series/series.module';
 import { CommentsModule } from './comments/comments.module';
-import { CategoriesModule } from './categories/categories.module';
+
 import { TagsModule } from './tags/tags.module';
 import { ImagesModule } from './images/images.module';
 import { AuthModule } from './auth/auth.module';
-import { MongoPrismaService } from './prisma/mongo-prisma.service';
+
+
 @Module({
   imports: [
     PrismaModule,
@@ -18,12 +19,13 @@ import { MongoPrismaService } from './prisma/mongo-prisma.service';
     PostsModule,
     SeriesModule,
     CommentsModule,
-    CategoriesModule,
+
     TagsModule,
     ImagesModule,
     AuthModule,
+
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

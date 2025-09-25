@@ -5,13 +5,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { serializeBigInt } from 'src/utils/serialize';
 import * as bcrypt from 'bcrypt';
 import { ConflictException } from '@nestjs/common';
+import { MongoPrismaService } from 'src/prisma/mongo-prisma.service';
 import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService, private prismaMongo: MongoPrismaService) { }
   async create(createUserDto: CreateUserDto) {
     const { email, password, username, fullName, bio, githubUrl, twitterUrl } =
       createUserDto as any;
@@ -232,4 +233,62 @@ export class UsersService {
       password: safe.password,
     };
   }
+
+    async findUserWithPosts(id: number) {
+    // 1. Fetch the user and all their related post metadata from PostgreSQL
+    const userWithPosts = await this.prisma.users.findUnique({
+      where: { id: BigInt(id) },
+      include: {
+        blog_posts: true, // Include all posts related to this user
+      },
+    });
+
+    if (!userWithPosts) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    // If the user has no posts, we can return early
+    if (userWithPosts.blog_posts.length === 0) {
+      return serializeBigInt(userWithPosts);
+    }
+
+    // 2. Extract the IDs of all the user's posts
+    const postIds = userWithPosts.blog_posts.map(post => Number(post.id));
+
+    // 3. Fetch all corresponding content documents from MongoDB in a single, efficient query
+    const blogContents = await this.prismaMongo.blog_content.findMany({
+      where: {
+        postId: {
+          in: postIds, // Use the 'in' filter to find all content for the user's posts
+        },
+      },
+    });
+
+    console.log(blogContents)
+
+    // 4. Create a Map for easy lookup of content by its postId
+    const contentMap = new Map(
+      blogContents.map(content => [content.postId, content]),
+    );
+
+    // 5. Combine the data: add the MongoDB content to each PostgreSQL post object
+    const postsWithContent = userWithPosts.blog_posts.map(post => {
+      const content = contentMap.get(Number(post.id)) || null;
+      return {
+        ...post,
+        content_details: content, // Add the rich content here
+      };
+    });
+
+   
+
+    // 6. Construct the final response object
+    const finalResponse = {
+      ...userWithPosts,
+      blog_posts: postsWithContent, // Replace the old posts with the enhanced version
+    };
+
+    return serializeBigInt(finalResponse);
+  }
+
 }

@@ -17,8 +17,7 @@ export const createPostSchema = z.object({
 
   // These are foreign keys and must be provided.
   user_id: z.number().int().positive('User ID must be a positive integer.'),
-  category_id: z.number().int().positive('Category ID must be a positive integer.'),
-  
+
   // The main body of the post. Can be optional.
   content: z.string().optional().nullable(),
 

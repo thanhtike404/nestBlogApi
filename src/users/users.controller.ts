@@ -176,6 +176,24 @@ export class UsersController {
   async findDeleted() {
     return this.usersService.findDeleted();
   }
+
+  @Get(':id/posts')
+  @ApiOperation({
+    summary: 'Get user with their posts',
+    description: 'Retrieves a user\'s profile along with all the posts they have created.',
+  })
+  @ApiOkResponse({
+    description: 'User and posts retrieved successfully.',
+    type: UserResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
+  findUserWithPosts(@Param('id') id: string) {
+    return this.usersService.findUserWithPosts(+id);
+  }
+
   @Get('by-email/:email')
   @ApiOperation({
     summary: 'Find user by email',
