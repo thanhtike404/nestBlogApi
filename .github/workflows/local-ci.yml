@@ -8,16 +8,25 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test-runner-job:
+  deploy-job:
     # IMPORTANT: This tells GitHub to send this job to your local runner
     runs-on: self-hosted
 
     steps:
-      # 1. Checks out your repository code onto your local machine
+      # 1. This checks out the code to a temporary directory, which is good practice.
       - name: Check out code
         uses: actions/checkout@v4
 
-      # 2. Creates an empty file named test.txt
-      - name: Create a test file
-        run: touch test.txt
+      # 2. This step updates your ACTUAL project folder on the server.
+      - name: Pull latest code in project directory
+        run: |
+          echo "Starting deployment..."
+          # --- IMPORTANT ---
+          # Replace this path with the real path to your project on the server
+          cd /home/ubuntu/nestBlogApi
+          
+          echo "Pulling latest changes from main branch..."
+          git pull origin main
+          
+          echo "Deployment complete."
 
