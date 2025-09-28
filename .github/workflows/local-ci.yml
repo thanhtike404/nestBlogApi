@@ -1,6 +1,6 @@
 # .github/workflows/local-ci.yml
 
-name: Local CI Pipeline Test
+name: Deploy with Docker Compose
 
 # This pipeline triggers on every push to the main branch
 on:
@@ -9,24 +9,40 @@ on:
 
 jobs:
   deploy-job:
-    # IMPORTANT: This tells GitHub to send this job to your local runner
+    # This job runs on your self-hosted runner (your server)
     runs-on: self-hosted
 
     steps:
-      # 1. This checks out the code to a temporary directory, which is good practice.
+      # 1. Checks out the repository code to the runner's workspace.
+      # This is useful for the workflow's context but we won't use this checkout directly.
       - name: Check out code
         uses: actions/checkout@v4
 
-      # 2. This step updates your ACTUAL project folder on the server.
+      # 2. Pulls the latest code into your ACTUAL project directory on the server.
       - name: Pull latest code in project directory
         run: |
-          echo "Starting deployment..."
+          echo "Navigating to project directory..."
           # --- IMPORTANT ---
-          # Replace this path with the real path to your project on the server
+          # Make sure this is the correct path to your project on the server
           cd /home/ubuntu/nestBlogApi
           
           echo "Pulling latest changes from main branch..."
           git pull origin main
-          
-          echo "Deployment complete."
 
+      # 3. Rebuilds and restarts the services using Docker Compose. 🚀
+      - name: Rebuild and Restart Docker Compose Services
+        run: |
+          echo "Starting Docker Compose..."
+          # Navigate to the project directory where your docker-compose.yml is located
+          cd /home/ubuntu/nestBlogApi
+          
+          # This command will:
+          #   up: Start the services
+          #   -d: Run in detached mode (in the background)
+          #   --build: Rebuild the images if the source code or Dockerfile has changed
+          docker-compose up -d --build
+
+      # 4. (Optional but Recommended) Clean up old, unused Docker images. 🧹
+      - name: Clean up old docker images
+        run: |
+          docker image prune -af
