@@ -30,7 +30,12 @@ export class AuthService {
             access_token: await this.jwtService.signAsync({
                 sub: user.id.toString(),
                 email: user.email,
+
             }),
+            user: {
+                id: user.id.toString(),
+                email: user.email,
+            },
         };
     }
 }
